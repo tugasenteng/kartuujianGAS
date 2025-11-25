@@ -1,1 +1,180 @@
-Coba Index
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SD Islam Al-Fajar</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+  <style>
+    body {
+      background: #FFF7EA;
+      font-family: 'Arial', sans-serif;
+    }
+
+    .card-custom {
+      border-radius: 12px;
+      border: 2px solid #FF9F1C;
+      background: white;
+      box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+    }
+
+    .btn-custom {
+      background: #2ECC71;
+      color: white;
+      border-radius: 8px;
+    }
+
+    .btn-custom:hover {
+      background: #28B463;
+      color: white;
+    }
+
+    .title-orange {
+      color: #FF9F1C;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container mt-4">
+
+  <!-- Logo sekolah -->
+  <div class="text-center mb-3">
+    <img src="https://lh3.googleusercontent.com/d/1rKuerL0IbhttP9cGpxRHjY9-tRATMjgD" width="130" class="rounded-circle shadow">
+  </div>
+
+  <h3 class="text-center title-orange mb-4">
+    <span class="text-success">SD Islam Al-Fajar</span>
+    <br>
+    Akses Link Kartu
+    <br>
+	Penilaian Sumatif Akhir Semester 1 (PSAS 1) Tahun Ajaran 2025/2026
+  </h3>
+
+  <div class="card p-3 card-custom">
+
+    <label class="fw-bold mb-2">Masukkan NIS:</label>
+    <input type="text" id="nisInput" class="form-control mb-3" placeholder="Contoh: 20230125">
+
+    <button class="btn btn-custom w-100 mb-3" onclick="cariNIS()">Cari Data</button>
+
+    <div id="hasil"></div>
+
+  </div>
+
+</div>
+
+<script>
+
+// URL Web App
+const url = "https://script.google.com/macros/s/AKfycbxoollWWFGnEpYTFNZABMoFhnKuEUWFuwyofkac0SBm9bwjjZEqpJuJyz_tyw07282m/exec?method=getData";
+
+let dataGlobal = [];
+
+// SweetAlert saat loading pertama kali
+Swal.fire({
+  title: "Mengambil data...",
+  text: "Mohon tunggu sebentar",
+  allowOutsideClick: false,
+  allowEscapeKey: false,
+  didOpen: () => {
+    Swal.showLoading();
+  }
+});
+
+// Ambil data dari Google Apps Script
+fetch(url)
+  .then(res => res.json())
+  .then(data => {
+    dataGlobal = data;
+    Swal.close();
+  })
+  .catch(() => {
+    Swal.fire({
+      icon: "error",
+      title: "Gagal memuat data",
+      text: "Periksa koneksi internet atau hubungi admin."
+    });
+  });
+
+
+// ==============================
+// Fungsi pencarian data
+// ==============================
+function cariNIS() {
+  const nis = document.getElementById("nisInput").value.trim();
+  const hasilDiv = document.getElementById("hasil");
+  hasilDiv.innerHTML = "";
+
+  if (nis === "") {
+    Swal.fire({
+      icon: "warning",
+      title: "NIS kosong",
+      text: "Silakan masukkan NIS terlebih dahulu."
+    });
+    return;
+  }
+
+  const siswa = dataGlobal.find(d => String(d.nis) === nis);
+
+  if (!siswa) {
+    Swal.fire({
+      icon: "error",
+      title: "Data tidak ditemukan",
+      text: "Pastikan NIS benar."
+    });
+    return;
+  }
+
+  // Jika Total Tagihan = 0 → tampilkan Link Kartu
+  if (Number(siswa.totalTagihan) === 0) {
+    hasilDiv.innerHTML = `
+      <div class="alert alert-success mt-3">
+        <h5 class="fw-bold">${siswa.nama} (${siswa.kelas})</h5>
+        <p class="mb-1">Total Tagihan: <b>Rp 0</b></p>
+        <a href="${siswa.linkKartu}" class="btn btn-success w-100" target="_blank">
+          📄 Lihat Kartu
+        </a>
+      </div>
+    `;
+  }
+
+  // Jika ada tagihan → tampilkan rincian
+  else {
+    hasilDiv.innerHTML = `
+      <div class="alert alert-warning mt-3">
+        <h5 class="fw-bold">${siswa.nama} (${siswa.kelas})</h5>
+
+        <p class="mb-1"><b>Total Tagihan: Rp ${siswa.totalTagihan}</b></p>
+        <ul class="mb-2">
+          <li>SPP: Rp ${siswa.spp}</li>
+          <li>Gedung: Rp ${siswa.gedung}</li>
+          <li>Dana Kegiatan: Rp ${siswa.danaKegiatan}</li>
+          <li>Ekskul: Rp ${siswa.ekskul}</li>
+          <li>PM: Rp ${siswa.pm}</li>
+        </ul>
+
+        <div class="alert alert-danger p-2">
+          <b>Catatan Penting:</b><br>
+          Lakukan konfirmasi pembayaran ke<br>
+          <b>WA Hotline SD Islam Al-Fajar</b><br>
+          <a href="https://wa.me/62811123489" class="text-success fw-bold" target="_blank">
+            0811-1234-89
+          </a>
+        </div>
+      </div>
+    `;
+  }
+}
+
+</script>
+
+</body>
+</html>
